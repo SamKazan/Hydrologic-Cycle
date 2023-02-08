@@ -4,5 +4,5 @@ This project focuses on the factors affecting the hydrologic cycle, using statis
 
 Rmarkdown file used to generate the slides can be found in this repository.
 
-You can find this on Rpubs:
+You can find slides on Rpubs:
 https://rpubs.com/SamK_Data/1000317
