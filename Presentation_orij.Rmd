@@ -1,0 +1,177 @@
+---
+title: "Hydrologic Cycle"
+author: "Cem Kazan"
+output: ioslides_presentation 
+css: styles.css
+---
+
+<style>
+pre {
+    line-height: 2.0em;
+    font-size: 10px;
+}
+body p, div, h1, h2, h3, h4, h5 {
+color: black;
+font-family: Time New Roman;
+}
+slides > slide.title-slide hgroup h1 {
+color: #8C1D40; 
+}
+h2 {
+color: #8C1D40; 
+}
+p {
+font-size = 12px
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+```
+
+## Hydrologic Cycle
+<p style="text-align:center;">
+<img src="Hydrologicycle.png" width="500" height="250">
+</p>
+<p style="font-size:18px;">
+The hydrologic cycle, also known as the water cycle, describes the constant movement of water in various forms, such as liquid, vapor, and ice, on and above the Earth's surface. The cycle is powered by the sun's energy, which causes water in the oceans to evaporate and rise into the atmosphere as water vapor. As the vapor cools, it forms clouds and falls back to the surface as precipitation. Some of this precipitation returns to the oceans, while the rest falls on land and either seeps into the soil or flows into rivers and streams. This water eventually makes its way back to the oceans, completing the cycle.
+</p>
+
+
+
+## Key Concepts
+
+<p style="font-size:20px;">
+**Evapotranspiration** ($ET$) is the process of water loss from the earth's surface, involving both evaporation & transpiration, affected by temperature, precipitation & water availability.
+<br><br>
+**Potential evapotranspiration** ($PET$) is the theoretical max ET rate under specific temp conditions, assuming unlimited water supply, typically measured as evaporation from a large water body like a lake or ocean.
+<br><br>
+**Temperature** ($T$) can directly affect the rate of evaporation, with higher temperatures leading to greater evarporation.
+<br><br>
+**Effective precipitation** ($EP$) is the amount of precipitation available for plants and organisms, calculated as total precipitation($P$) minus ET($P-ET$). 
+<br><br>
+**Surface runoff** ($SR$) is water that flows over land and into water bodies, which also affects ET.
+<br><br>
+Thus to conserve **Hydrologic balance**
+$P=ET+SR+\Delta S$
+</p>
+
+## Data Set Explanation 
+```{r, echo=TRUE}
+df <- read.csv("US_HydrocycleData.csv")
+df2 <- read.csv("Book2.csv")
+df_clean <- df %>% 
+  rename(Precipitation = Annual.Precipitation, PET = Potential.Evapo..transpiration, ET = Evapo..transpiration) %>% 
+  select(-X,-X.1,-X.2,-X.3)
+```
+<font size="4">
+The dataset includes locations of cities from NE, NW, SE, SW and The Great Plains with their corresponding ET, PET, SR, P and T numbers collected from  <a href="https://asu.maps.arcgis.com/apps/webappviewer/index.html?id=04928019f11f40128783f653f76efc3c">university database</a> and <a href="https://www.usclimatedata.com/climate/united-states/us"> usclimatedata</a>. 
+</font>
+```{r, comment=NA}
+head(df_clean,6)
+```
+
+## Precipitation versus PET & ET
+
+```{r, fig.width=7,fig.height=3,message = FALSE}
+ggplot(df2, aes(x = Precipitation , y = ET, color = label, shape = label)) +
+    geom_point(size = 4) + 
+    geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+    labs ( x= "Precipitation (cm)", y = "PET & ET (cm)", title = "ET & PEt vs Precipitation", shape = "ET", colour = "ET" ) 
+```
+<font size="3">
+
+- The relation between precipitation and ET is important, as higher precipitation rates can lead to increased ET through transpiration.
+
+- As precipitation levels increase, there is a corresponding decrease in potential evapotranspiration (PET) due to the elevation in relative humidity. These observations may also be influenced by temperature and wind speed variations. That result show us that PET values are energy bounded.
+
+The linear fit used in plot is calculated by :
+$\hat{Y} = \beta_0 + \beta_1*X_i$ 
+where $\hat{Y}$ is the prediction, $\beta_0$ is the intercept, $\beta_1$ is slope, and $X_i$ is the ith value of X.
+</font>
+
+
+## Corelation of Temperature vs PET & ET
+```{r, fig.width=7,fig.height=4,message = FALSE}
+ggplot(df2, aes(x = Temperature , y = ET, color = label, shape = label)) +
+    geom_point(size = 4) + 
+    geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+    labs ( x= "Temperature (°C)", y = "PET & ET (cm)", title = "ET & PET vs Temperature", shape = "ET", colour = "ET" )
+
+```
+<font size="3">
+
+- PET line shows positive corelation between temperature and evapotranpiration rate.
+
+- We can observe from the regression line when temperature rises ET stays lateral which indicates that these locations are water bounded. Even though there is enough heat there aren't enough water to evaporate. 
+</font>
+
+## Coralation of EP vs Surface Runoff vs Aridity Index
+
+```{r, echo=TRUE}
+fig <- df_clean %>% 
+  plot_ly(x = ~Effective.Precipitation, 
+          y = ~Surface.Runoff, 
+          z = ~Aridity.Index,
+          type = "scatter3d",
+          mode = "markers",
+          marker = list(size=8)
+          ) %>% 
+  layout(title = "EP vs Surface Runoff vs Aridity Index",
+         scene = list(
+         xaxis = list(showgrid = F,title = "Effective Precipitation"),
+         yaxis= list(showgrid = F,range = c(0,10),title ="Surface Runoff"),
+         zaxis = list(showgrid = F,title = "Aridity Index (PET/P)")
+                    )
+         )
+```
+
+This is the code that is used to generate the following plot using plotly. 
+
+ ---
+
+```{r, ig.width=12,fig.height=6,fig.align='center'}
+fig
+```
+
+## What is Arridity Index? 
+<font size="4">
+The Aridity index is a ratio that compares the amount of water evaporated from an area to the amount of precipitation received, which is used to classify regions based on dryness, with lower values indicating dryer climates.
+
+Aridity Index = $PET/P$
+
+Areas with higher aridity, as indicated by a higher aridity index, will generally have lower levels of effective precipitation and surface runoff. This is due to the fact that in arid regions, the rate of evapotranspiration is relatively high, which leads to a greater demand for water and, as a result, lower levels of water available for surface runoff. Additionally, arid regions typically receive lower levels of precipitation, which further contributes to the low levels of surface runoff.
+
+Conversely, areas with lower aridity have a lower rate of evapotranspiration, which results in higher levels of effective precipitation and surface runoff. The increased availability of water in these regions allows for more surface runoff to occur.
+</font>
+
+## Distribution of Temperature over Cities
+
+```{r, warning=FALSE,fig.width=6,fig.height=3,fig.align='center'}
+df_temp <- df_clean %>% filter (Location != "Aspen")
+
+
+fig_histo <- ggplot(data = df_temp, aes(Temperature)) +
+  geom_histogram(aes(y=after_stat(density)),fill = "maroon",binwidth = 3)+
+  stat_function(fun = dnorm, args = list(mean = mean(df_temp$Temperature), sd = sd(df_temp$Temperature)), color = "black")+
+  labs (x= "Temperature (°C)", y = "density", title = "Temperature Distribution") +
+  xlim(0,35)
+
+fig_histo
+```
+
+<p style="font-size:18px;">
+The histogram of temperature indicates that multiple cities attuned to similar temperatures. By using Gaussian distribution function we can fit a Gaussian distribution to the histogram. The fit is a useful indicator to estimate possible temperatures for unknown cities.
+<br><br>
+Gaussian distribution formula is used to create the fit.
+<br><br>
+$f(x)=\frac{1}{\sigma\sqrt{2\pi}} \exp - \frac{(x - \mu)^2}{2 \sigma^2}$
+</p>
+
+
